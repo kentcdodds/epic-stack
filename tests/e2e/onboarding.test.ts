@@ -10,7 +10,12 @@ import {
 	USERNAME_MIN_LENGTH,
 } from '#app/utils/user-validation'
 import { readEmail } from '#tests/mocks/utils.ts'
-import { createUser, expect, test as base } from '#tests/playwright-utils.ts'
+import {
+	createUser,
+	expect,
+	test as base,
+	reliableCheck,
+} from '#tests/playwright-utils.ts'
 
 const URL_REGEX = /(?<url>https?:\/\/[^\s$.?#].[^\s]*)/
 const CODE_REGEX = /Here's your verification code: (?<code>[\d\w]+)/
@@ -89,9 +94,9 @@ test('onboarding with link', async ({ page, getOnboardingData }) => {
 
 	await page.getByLabel(/^confirm password/i).fill(onboardingData.password)
 
-	await page.getByLabel(/terms/i).check()
+	await reliableCheck(page.getByLabel(/terms/i))
 
-	await page.getByLabel(/remember me/i).check()
+	await reliableCheck(page.getByLabel(/remember me/i))
 
 	await page.getByRole('button', { name: /Create an account/i }).click()
 
@@ -167,9 +172,10 @@ test('completes onboarding after GitHub OAuth given valid user details', async (
 		name: /create an account/i,
 	})
 
-	await page
-		.getByLabel(/do you agree to our terms of service and privacy policy/i)
-		.check()
+	await reliableCheck(
+		page.getByLabel(/do you agree to our terms of service and privacy policy/i),
+	)
+
 	await createAccountButton.click()
 	await expect(page).toHaveURL(/signup/i)
 
@@ -310,9 +316,10 @@ test('shows help texts on entering invalid details on onboarding page after GitH
 	await expect(page).toHaveURL(/\/onboarding\/github/)
 
 	// we are all set up and ...
-	await page
-		.getByLabel(/do you agree to our terms of service and privacy policy/i)
-		.check()
+	await reliableCheck(
+		page.getByLabel(/do you agree to our terms of service and privacy policy/i),
+	)
+
 	await createAccountButton.click()
 	await expect(createAccountButton.getByText('error')).not.toBeAttached()
 
