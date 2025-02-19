@@ -56,7 +56,7 @@ export async function action({ request }: Route.ActionArgs) {
 	)
 }
 
-const RegistrationResultSchema = z.object({
+const RegistrationOptionsSchema = z.object({
 	options: z.object({
 		rp: z.object({
 			id: z.string(),
@@ -74,6 +74,20 @@ const RegistrationResultSchema = z.object({
 				alg: z.number(),
 			}),
 		),
+		authenticatorSelection: z
+			.object({
+				authenticatorAttachment: z
+					.enum(['platform', 'cross-platform'])
+					.optional(),
+				residentKey: z
+					.enum(['required', 'preferred', 'discouraged'])
+					.optional(),
+				userVerification: z
+					.enum(['required', 'preferred', 'discouraged'])
+					.optional(),
+				requireResidentKey: z.boolean().optional(),
+			})
+			.optional(),
 	}),
 }) satisfies z.ZodType<{ options: PublicKeyCredentialCreationOptionsJSON }>
 
@@ -86,7 +100,7 @@ export default function Passkeys({ loaderData }: Route.ComponentProps) {
 			setError(null)
 			const resp = await fetch('/webauthn/registration')
 			const jsonResult = await resp.json()
-			const parsedResult = RegistrationResultSchema.parse(jsonResult)
+			const parsedResult = RegistrationOptionsSchema.parse(jsonResult)
 
 			const regResult = await startRegistration({
 				optionsJSON: parsedResult.options,

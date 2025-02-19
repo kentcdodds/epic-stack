@@ -255,7 +255,21 @@ function PasskeyLogin({
 			})
 
 			if (!verificationResponse.ok) {
-				throw new Error('Failed to authenticate with passkey')
+				const json = await verificationResponse.json().catch(() => ({
+					status: 'error',
+					error: 'Unknown error',
+				}))
+				const parsed = z
+					.object({
+						status: z.literal('error'),
+						error: z.string(),
+					})
+					.safeParse(json)
+				if (parsed.success) {
+					throw new Error(parsed.data.error)
+				} else {
+					throw new Error('Unknown error')
+				}
 			}
 
 			const verificationJson = await verificationResponse.json()
